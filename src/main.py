@@ -25,7 +25,7 @@ def whats_new(session):
 
     sections_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'})
-    result = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор'),]
+    result = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор'), ]
     for section in tqdm(sections_by_python):
         version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
