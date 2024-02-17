@@ -24,11 +24,3 @@ def find_tag(soup, tag, attrs=None):
         logging.error(error_msg, stack_info=True)
         raise ParserFindTagException(error_msg)
     return searched_tag
-
-
-def unexpected_status(url, current_status, expected_status):
-    logging.info(
-        f'Несовпадающие статусы:\n{url}\n'
-        f'Статус в карточке: {current_status}\n'
-        f'Ожидаемые статусы: {expected_status}'
-    )

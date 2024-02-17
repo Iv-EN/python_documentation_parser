@@ -1,5 +1,5 @@
 import csv
-import datetime as dt
+import datetime
 import logging
 
 from prettytable import PrettyTable
@@ -34,7 +34,7 @@ def file_output(results, cli_args):
     results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
-    now = dt.datetime.now()
+    now = datetime.datetime.now()
     now_formatted = now.strftime(DATETIME_FORMAT)
     file_name = f'{parser_mode}_{now_formatted}.csv'
     file_path = results_dir / file_name

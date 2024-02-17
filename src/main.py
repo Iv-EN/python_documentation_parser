@@ -1,18 +1,21 @@
 import logging
 import re
+from collections import defaultdict
 from urllib.parse import urljoin
 
 import requests_cache
 from bs4 import BeautifulSoup
+from requests import Session
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, EXPECTED_STATUS, PEP_URL
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_URL
 from outputs import control_output
-from utils import find_tag, get_response, unexpected_status
+from utils import find_tag, get_response
 
 
-def whats_new(session):
+def whats_new(session: Session) -> list:
+    """Собирает информацию об изменениях в Python."""
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = get_response(session, whats_new_url)
     if response is None:
@@ -43,7 +46,8 @@ def whats_new(session):
     return result
 
 
-def latest_versions(session):
+def latest_versions(session: Session) -> list:
+    """Собирает ссылки на документацию версий Python."""
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
@@ -71,7 +75,8 @@ def latest_versions(session):
     return results
 
 
-def download(session):
+def download(session: Session) -> None:
+    """Скачивает архив с PDF-версией документации Python на локальный диск."""
     download_url = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, download_url)
     if response is None:
@@ -93,8 +98,11 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def pep(session):
-    pep_counter = {}
+def pep(session: Session) -> list:
+    """Определяет количество PEP в каждом статусе."""
+    pep_counter = defaultdict(int)
+    logs = []
+    results = [('Статус', 'Количество')]
     response = get_response(session, PEP_URL)
     if response is None:
         return
@@ -102,7 +110,6 @@ def pep(session):
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     body_table = find_tag(section_tag, 'tbody')
     rows = body_table.find_all('tr')
-    results = [('Статус', 'Количество')]
     for row in tqdm(rows[1:]):
         first_tag = find_tag(row, 'td')
         preview_status = first_tag.text[1:]
@@ -114,20 +121,24 @@ def pep(session):
             continue
         soup = BeautifulSoup(response.text, features='lxml')
         dl = find_tag(soup, 'dl')
-        dt_tags = dl.find_all('dt')
-        for dt in dt_tags:
-            if dt.text == 'Status:':
-                dt_status = dt
-                break
-        pep_status = dt_status.find_next_sibling('dd').string
-        status_counter = pep_counter.get(pep_status) or 0
-        pep_counter[pep_status] = status_counter + 1
+        status_line = dl.find(string='Status')
+        status_line = status_line.find_parent()
+        pep_status = str(
+            status_line.next_sibling.next_sibling.string
+        )
         if pep_status not in EXPECTED_STATUS[preview_status]:
-            unexpected_status(
-                pep_link, pep_status, EXPECTED_STATUS[preview_status])
-    for item in pep_counter.items():
-        results.append(item)
-    results.append(('Total', len(rows[1:])))
+            logs.append(
+                f'Несовпадающие статусы:\n{pep_link}\n'
+                f'Статус в карточке: {pep_status}\n'
+                f'Ожидаемые статусы: {EXPECTED_STATUS[preview_status]}'
+            )
+        else:
+            status_counter = pep_counter.get(pep_status, 0)
+            pep_counter[pep_status] = status_counter + 1
+    for log in logs:
+        logging.info(log)
+    results.extend(pep_counter.items())
+    results.append(('Total', sum(pep_counter.values())))
     return results
 
 
