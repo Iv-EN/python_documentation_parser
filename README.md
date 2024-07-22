@@ -8,7 +8,7 @@
 Клонируйте репозиторий:
 
 ```
-git clone git@github.com:Iv-EN/bs4_parser_pep.git
+git clone https://github.com/Iv-EN/python_documentation_parser.git
 ```
 В корневой папке создайте и активируйте виртуальное окружение:
 ```
