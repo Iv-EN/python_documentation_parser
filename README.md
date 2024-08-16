@@ -1,6 +1,5 @@
 # Проект парсинга pep
 [![Python](https://img.shields.io/badge/-Python-464646?style=flat&logo=Python&logoColor=56C0C0&color=008080)](https://www.python.org/)
-[![Practicum.Yandex](https://img.shields.io/badge/-Practicum.Yandex-464646?style=flat&logo=Practicum.Yandex&logoColor=56C0C0&color=008080)](https://practicum.yandex.ru/)
 # Парсер документации python и PEP
 ## Описание
 Парсер информации о python с **https://docs.python.org/3/** и **https://peps.python.org/**
